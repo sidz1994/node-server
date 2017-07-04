@@ -21,12 +21,12 @@ function postlats(datavals) {
             console.log("1. err = " + err);
             return;
         }
-        req.query("insert into [safev1].[dbo].[lats] (lat,long) values ("+obj.lat+","+obj.long+");", function (err, recordset) {
+        req.query("insert into [safev1].[dbo].[lats] (lat,long) values ("+obj.lat+","+obj.long+");", function (err, data) {
                 if (err) {
                     console.log("2. err = " + err);
                     return;
                 } else {
-                    console.log(recordset);
+                    console.log(data);
                 }
                 conn.close();
             });
@@ -52,14 +52,9 @@ const requestHandler = (request, response) => {
            
             console.log("Partial body: " + data);
             postlats(data);
-            var str =data;
-            var obj = JSON.parse(str);
-            console.log(obj.user_id);
-            console.log();
-
             
         });
-console.log("I'm active");
+console.log("I'm available");
   
 }
 
