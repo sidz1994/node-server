@@ -1,0 +1,9 @@
+{
+  "name": "db2",
+  "version": "0.0.0",
+  "description": "db2",
+  "main": "app.js",
+  "author": {
+    "name": "BHARATH"
+  }
+}
