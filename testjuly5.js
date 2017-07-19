@@ -1,4 +1,7 @@
 var sql = require("mssql");
+var FCM = require('fcm-node');
+var serverKey = require('E:/nodepackage/key.json'); //put the generated private key path here     
+
 
 
 const config = {
@@ -66,8 +69,58 @@ function alert(obj) {
                 conn.close();
             });
     });
+
+    var fcm = new FCM(serverKey);
+ 
+    var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera) 
+        to: 'fnsELZ3z7QQ:APA91bFnCxnhxnmQJkLH2-3u8mYl1uPH0ibDy01NYSpD07pNuBiVZbrIa-lKmQbeJC3p2XbGQlTicd0DZERe1oaQ5dkkCbnMx7_XIyRSyormuGHCY59hHMv2tnd4V35CjbfwtjtSOqQU', 
+        notification: {
+            title: 'message', 
+            body: '33.419536,-111.915952' 
+        },
+        
+        
+    };
+    
+    fcm.send(message, function(err, response){
+        if (err) {
+            console.log("Something has gone wrong!")
+        } else {
+            console.log("Successfully sent with response: ", response)
+        }
+    });
 }
 
+
+function fcm_token(obj) {
+    var conn = new sql.Connection(config);
+    var req = new sql.Request(conn);
+    conn.connect(function (err) {
+        if (err) {
+            console.log("1. err = " + err);
+            return;
+        }
+        var query_alert=`SET TRANSACTION ISOLATION LEVEL SERIALIZABLE; BEGIN TRANSACTION;
+                        update [safet].[dbo].[fcm_token] set token='`+obj.fcm_token+`' where uid='`+obj.uid+`';
+                        IF @@ROWCOUNT = 0
+                        BEGIN
+                        insert into [safet].[dbo].[fcm_token] (uid,token) values 
+                        ('`+obj.uid+`','`+obj.fcm_token+`')
+                        END COMMIT TRANSACTION;`
+        req.query(query_alert, function (err, data) {
+                if (err) {
+                    console.log("2. err = " + err);
+                    return;
+                } else {
+                    console.log(data);
+                }
+                conn.close();
+            });
+    });
+
+    
+    
+}
 
 
 
@@ -100,34 +153,34 @@ function registration(obj){
 
 
 
-function sendMessageToUser(deviceId, message) {
-  request({
-    url: 'https://fcm.googleapis.com/fcm/send',
-    method: 'POST',
-    headers: {
-      'Content-Type' :' application/json',
-      'Authorization': 'key=AAAAAlXppOM:APA91bEVEkKZ1sSzu7cx3jmxJGmTdnKsOrHevlOKMXH_KkYk6g-Gvfxs2sMmRu-HI2nKNo6R6TULST-Ml5zcmh93NwT5RMyjYFv-51ZfBAbCRL0yG8ZkfMf-UW0JIHd5_cimRfnXf8fE'
-    },
-    body: JSON.stringify(
-      { "data": {
-        "message": message
-      },
-        "to" : deviceId
-      }
-    )
-  }, function(error, response, body) {
-    if (error) { 
-      console.error(error, response, body); 
-    }
-    else if (response.statusCode >= 400) { 
-      console.error('HTTP Error: '+response.statusCode+' - '+response.statusMessage+'\n'+body); 
-    }
-    else {
-      console.log('Done!')
-    }
-  });
-
+function main_table(obj) {
+   	var conn = new sql.Connection(config);
+    var req = new sql.Request(conn);
+    conn.connect(function (err) {
+        if (err) {
+            console.log("1. err = " + err);
+            return;
+        }
+        var query_alert=`SET TRANSACTION ISOLATION LEVEL SERIALIZABLE; BEGIN TRANSACTION;
+        				update [safet].[dbo].[all_users] set lat=
+        				CAST('`+obj.lat+`' AS DECIMAL(12,9)),long=CAST('`+obj.long+`' AS DECIMAL(12,9)) where uid='`+obj.uid+`';
+						IF @@ROWCOUNT = 0
+						BEGIN
+						insert into [safet].[dbo].[all_users] (uid,lat,long) values 
+						('`+obj.uid+`',CAST('`+obj.lat+`' AS DECIMAL(12,9)),CAST('`+obj.long+`' AS DECIMAL(12,9)))
+						END COMMIT TRANSACTION;`
+        req.query(query_alert, function (err, data) {
+                if (err) {
+                    console.log("2. err = " + err);
+                    return;
+                } else {
+                    console.log(data);
+                }
+                conn.close();
+            });
+    });
 }
+
 
 
 
@@ -148,21 +201,18 @@ const requestHandler = (request, response) => {
             if (obj.table=="profile") {
             	profile(obj);  
             }
-            if (obj.table=="alert") {
+            else if (obj.table=="alert") {
                 alert(obj);
-            }/*
-            else if (obj.table==4) {
+            }
+            else if (obj.table=="location") {
                 main_table(obj);
             }
-            else if (obj.table==5) {
-                alert_rising(obj);
-            }
-            else if(object.table==6){
-                sendMessageToUser(obj.token,obj.location);
+            else if(obj.table=="fcm_token"){
+                fcm_token(obj);
             } else {
                 console.log("");//request not matching any table number
             }
-           */ 
+           
             
         });
 console.log("I'm available");
