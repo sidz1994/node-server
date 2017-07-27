@@ -194,7 +194,7 @@ const requestHandler = (request, response) => {
                   response.on('error', (err) => {
                   console.error(err);
                   });
-                  response.end(JSON.stringify(vals));
+                  response.end(vals);
                 });
 
 
