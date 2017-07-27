@@ -66,13 +66,13 @@ function fcm_token(obj) {
 function alert(obj)
 {
   var client= new pg.Client(connectionString);
-  var fcm = new FCM(serverKey);
+  //var fcm = new FCM(serverKey);
   client.connect(function(err) 
   {
     if (err) {
       return console.log("err = " + err);
     }
-    var query_alert=`select foo.token from (
+    var query_alert=` select foo.token from (
                       Select ST_DISTANCE(a.where_is,ST_POINT('`+obj.lat+`', '`+obj.long+`') )
                       as new_dist,b.token from public.all_users a,public.fcm_token b 
                       where a.uid=b.uid 
@@ -109,6 +109,32 @@ function alert(obj)
 }
 
 
+function heatmap(obj,cb){
+
+  var client= new pg.Client(connectionString);
+  client.connect(function(err) {
+    if (err) {
+      return console.log("err = " + err);
+    }
+    var query_alert=`SELECT count(*)
+                      FROM public.all_users u
+                      where ST_DWithin(u.where_is, ST_POINT('`+obj.lat+`', '`+obj.long+`') , 3000);`
+
+    client.query(query_alert, function (err, result) {
+      client.end();
+      if (err) {
+          console.log("err = " + err);
+          return;
+      } else {
+          result.rows.forEach(function(row,index){
+              return cb(row.count);
+              });
+      }
+    });
+    
+  });
+}
+
 function main_table(obj) {
   var client= new pg.Client(connectionString);
   client.connect(function(err) {
@@ -139,13 +165,13 @@ function main_table(obj) {
 
 const http = require('http')  
 const port = 4000
-
+var fcm = new FCM(serverKey);
 const requestHandler = (request, response) => { 
      
 
-    console.log(request.url);
+    
     request.on('data', function (data) {
-            var request = require('request');//added for push notification
+            //var request = require('request');//added for push notification
            
             console.log("Partial body: " + data);
             var obj = JSON.parse(data);
@@ -161,6 +187,17 @@ const requestHandler = (request, response) => {
             }
             else if(obj.table=="fcm_token"){
                 fcm_token(obj);
+            }
+            else if(obj.table=="heat_map"){
+                heatmap(obj, function(vals){
+                  console.log(vals);
+                  response.on('error', (err) => {
+                  console.error(err);
+                  });
+                  response.end(JSON.stringify(vals));
+                });
+
+
             } else {
                 console.log("");//request not matching any table number
             }

@@ -89,31 +89,28 @@ function alert(obj) {
                 if (err) {
                     console.log("2. err = " + err);
                     return;
-                } else {
+                }
+                else 
+                {
                 	for (var i = 0; i < data.length; i++) {
     					var row = data[i];
     					console.log(row.token);
-
-
     					var message = { //this may vary according to the message type (single recipient, multicast, topic, et cetera) 
-        to:row.token,// 'fnsELZ3z7QQ:APA91bFnCxnhxnmQJkLH2-3u8mYl1uPH0ibDy01NYSpD07pNuBiVZbrIa-lKmQbeJC3p2XbGQlTicd0DZERe1oaQ5dkkCbnMx7_XIyRSyormuGHCY59hHMv2tnd4V35CjbfwtjtSOqQU', 
-        notification: {
-            title: 'message', 
-            body: obj.lat+','+obj.long 
-        },
-        
-        
-    };
+        								to:row.token,// 'fnsELZ3z7QQ:APA91bFnCxnhxnmQJkLH2-3u8mYl1uPH0ibDy01NYSpD07pNuBiVZbrIa-lKmQbeJC3p2XbGQlTicd0DZERe1oaQ5dkkCbnMx7_XIyRSyormuGHCY59hHMv2tnd4V35CjbfwtjtSOqQU', 
+        								notification: {
+							            title: 'message', 
+							            body: obj.lat+','+obj.long},      
+   	 								};
     
-    fcm.send(message, function(err, response){
-        if (err) {
-            console.log("Something has gone wrong!")
-        } else {
-            console.log("Successfully sent with response: ", response)
-        }
-    });
-					}
-                //    console.log(json(data));
+					    fcm.send(message, function(err, response){
+					        if (err) {
+					            console.log("Something has gone wrong!")
+					        } else {
+					            console.log("Successfully sent with response: ", response)
+					        }
+					    });
+										}
+					                //    console.log(json(data));
                 }
                 conn.close();
             });
